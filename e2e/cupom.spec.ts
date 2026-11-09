@@ -1,0 +1,56 @@
+import { expect, test } from '@playwright/test'
+
+test('aplica SEXTOU e mostra total com desconto', async ({ page }) => {
+  await page.goto('/')
+
+  const botaoAdicionar = page.getByRole('button', { name: 'Adicionar' }).first()
+  await expect(botaoAdicionar).toBeVisible({ timeout: 15_000 })
+  await botaoAdicionar.click()
+
+  await expect(page.getByText(/1 item no pedido/)).toBeVisible()
+
+  await page.getByTestId('input-cupom').fill('SEXTOU')
+  await page.getByTestId('botao-aplicar-cupom').click()
+
+  await expect(page.getByTestId('linha-desconto')).toBeVisible()
+  await expect(page.getByTestId('linha-desconto')).toContainText('SEXTOU')
+  await expect(page.getByTestId('botao-remover-cupom')).toBeVisible()
+
+  // Prova visual: resumo com desconto aplicado
+  await page.getByTestId('resumo-pedido').screenshot({ path: 'docs/prova-cupom.png' })
+})
+
+test('cupom inválido mostra Cupom inválido', async ({ page }) => {
+  await page.goto('/')
+  const botaoAdicionar = page.getByRole('button', { name: 'Adicionar' }).first()
+  await expect(botaoAdicionar).toBeVisible({ timeout: 15_000 })
+  await botaoAdicionar.click()
+
+  await page.getByTestId('input-cupom').fill('NADA')
+  await page.getByTestId('botao-aplicar-cupom').click()
+  await expect(page.getByTestId('erro-cupom')).toHaveText('Cupom inválido')
+})
+
+test('pedido vazio não aceita cupom', async ({ page }) => {
+  await page.goto('/')
+  await expect(page.getByText('Seu pedido está vazio')).toBeVisible()
+  await page.getByTestId('input-cupom').fill('SEXTOU')
+  await page.getByTestId('botao-aplicar-cupom').click()
+  await expect(page.getByTestId('erro-cupom')).toHaveText('Pedido vazio')
+  await expect(page.getByTestId('linha-desconto')).toHaveCount(0)
+})
+
+test('dá pra remover o cupom aplicado', async ({ page }) => {
+  await page.goto('/')
+  const botaoAdicionar = page.getByRole('button', { name: 'Adicionar' }).first()
+  await expect(botaoAdicionar).toBeVisible({ timeout: 15_000 })
+  await botaoAdicionar.click()
+
+  await page.getByTestId('input-cupom').fill('PRIMEIROPR')
+  await page.getByTestId('botao-aplicar-cupom').click()
+  await expect(page.getByTestId('linha-desconto')).toBeVisible()
+
+  await page.getByTestId('botao-remover-cupom').click()
+  await expect(page.getByTestId('linha-desconto')).toHaveCount(0)
+  await expect(page.getByTestId('botao-aplicar-cupom')).toBeVisible()
+})
