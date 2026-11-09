@@ -31,6 +31,6 @@ app.get('/api/lanches', async (req, res) => {
 })
 
 const PORTA = 3333
-app.listen(PORTA, () => {
-  console.log(`🍔 DevLanches API rodando em http://localhost:${PORTA} (latência simulada ativa)`)
+app.listen(PORTA, '127.0.0.1', () => {
+  console.log(`🍔 DevLanches API rodando em http://127.0.0.1:${PORTA} (latência simulada ativa)`)
 })
