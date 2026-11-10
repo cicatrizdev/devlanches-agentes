@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSearch } from '@/hooks/useSearch'
+import { Checkout, PedidoConfirmado } from './Checkout'
 import { LancheCard } from './LancheCard'
 import { ResumoPedido } from './ResumoPedido'
 import { CATEGORIAS, type Lanche } from '@/types/lanche'
@@ -19,6 +20,10 @@ export function CardapioSearch() {
   const [busca, setBusca] = useState('')
   const [categoria, setCategoria] = useState('todas')
   const [pedido, setPedido] = useState<Lanche[]>([])
+  // Sem roteador: a tela é estado. Checkout e confirmação recebem o pedido
+  // por props — a fonte da verdade continua aqui.
+  const [tela, setTela] = useState<'cardapio' | 'checkout' | 'confirmado'>('cardapio')
+  const [totalConfirmado, setTotalConfirmado] = useState(0)
 
   // ✅ Composição: useSearch (debounce + domínio) usa useFetch (rede +
   // cancelamento) por baixo. O componente não sabe — nem precisa saber —
@@ -48,6 +53,28 @@ export function CardapioSearch() {
     setPedido((atual) => [...atual, lanche])
   }, [])
 
+  const confirmarPedido = useCallback(() => {
+    setTotalConfirmado(total)
+    setPedido([])
+    setTela('confirmado')
+  }, [total])
+
+  if (tela === 'checkout') {
+    return (
+      <Checkout
+        pedido={pedido}
+        onVoltar={() => setTela('cardapio')}
+        onConfirmar={confirmarPedido}
+      />
+    )
+  }
+
+  if (tela === 'confirmado') {
+    return (
+      <PedidoConfirmado total={totalConfirmado} onVoltar={() => setTela('cardapio')} />
+    )
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -74,7 +101,11 @@ export function CardapioSearch() {
         </Select>
       </div>
 
-      <ResumoPedido quantidade={pedido.length} total={total} />
+      <ResumoPedido
+        quantidade={pedido.length}
+        total={total}
+        onFinalizar={() => setTela('checkout')}
+      />
 
       {erro && (
         <Alert variant="destructive">
