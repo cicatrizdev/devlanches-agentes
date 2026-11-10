@@ -53,11 +53,11 @@ export function CardapioSearch() {
     setPedido((atual) => [...atual, lanche])
   }, [])
 
-  const confirmarPedido = useCallback(() => {
-    setTotalConfirmado(total)
+  const confirmarPedido = useCallback((totalFinal: number) => {
+    setTotalConfirmado(totalFinal)
     setPedido([])
     setTela('confirmado')
-  }, [total])
+  }, [])
 
   if (tela === 'checkout') {
     return (
